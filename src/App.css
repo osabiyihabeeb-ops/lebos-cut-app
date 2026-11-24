@@ -72,3 +72,102 @@ body { margin: 0; background: #111; }
 .footer-logo { font-weight: 800; font-size: 18px; margin: 0 0 6px; color: #FFD700; }
 .footer-text { color: #aaa; font-size: 13px; margin: 0 0 8px; }
 .footer-copy { color: #777; font-size: 12px; margin: 0; }
+/* --- PAYMENT SUMMARY FIX --- */
+.payment-summary {
+  background: #ffffff !important;
+  color: #111111 !important;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  padding: 16px;
+  text-align: left;
+  margin: 12px 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.payment-summary p {
+  color: #111111 !important;
+  margin: 8px 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.payment-summary b {
+  color: #000000 !important;
+}
+
+.payment-summary hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 12px 0;
+}
+
+.payment-total {
+  font-size: 19px !important;
+  color: #000 !important;
+}
+
+.payment-total b {
+  color: #111 !important;
+}
+
+/* Make payment form itself clean white */
+.booking-form {
+  background: #ffffff !important;
+  color: #111 !important;
+}
+
+.booking-form h3,
+.booking-form p {
+  color: #111 !important;
+}
+
+.booking-note {
+  color: #666 !important;
+}
+
+/* --- MOBILE RESPONSIVE --- */
+@media (max-width: 768px) {
+  .booking-page {
+    padding: 12px !important;
+  }
+
+  .booking-content {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .booking-form-section,
+  .services-section {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .top-banner {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding: 16px !important;
+  }
+
+  .top-banner img {
+    width: 100% !important;
+    max-width: 320px !important;
+    height: auto !important;
+  }
+
+  .booking-form input,
+  .booking-form select,
+  .booking-form button {
+    width: 100% !important;
+    font-size: 16px !important; /* stops iPhone zooming in */
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .services-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
