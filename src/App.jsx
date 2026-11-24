@@ -15,6 +15,9 @@ const SERVICES = [
 
 export default function App() {
   const [page, setPage] = useState("home");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminPin, setAdminPin] = useState("");
   const [selected, setSelected] = useState(SERVICES[4]);
   const [showBook, setShowBook] = useState(false);
   const [bookings, setBookings] = useState(() => JSON.parse(localStorage.getItem("bookings") || "[]"));
@@ -68,7 +71,13 @@ export default function App() {
         <button onClick={() => setPage("home")} className={page === "home" ? "nav-btn active" : "nav-btn"}>🏠 Home</button>
         <button onClick={() => setPage("book")} className={page === "book" ? "nav-btn active" : "nav-btn"}>📅 Book</button>
         <button onClick={() => setPage("gallery")} className={page === "gallery" ? "nav-btn active" : "nav-btn"}>🖼️ Gallery</button>
-        <button onClick={() => setPage("admin")} className={page === "admin" ? "nav-btn active" : "nav-btn"}>🔒 Admin</button>
+        <button className="nav-btn" onClick={() => {
+  if (isAdmin) {
+    setPage("admin");
+  } else {
+    setShowAdminLogin(true);
+  }
+}}>🔒 Admin</button>
       </nav>
 
       {page === "home" && (
@@ -184,8 +193,33 @@ export default function App() {
           })}
         </div>
       )}
+       
+       {showAdminLogin && !isAdmin && (
+  <div style={{padding: "20px", textAlign: "center"}}>
+    <h2>Owner Only</h2>
+    <p>Enter Admin PIN</p>
+    <input 
+      type="password" 
+      value={adminPin}
+      onChange={(e) => setAdminPin(e.target.value)}
+      placeholder="Enter PIN"
+      style={{padding: "10px", fontSize: "16px"}}
+    />
+    <br /><br />
+    <button onClick={() => {
+      if (adminPin === "7576") { // <-- CHANGE THIS TO YOUR PIN
+        setIsAdmin(true);
+        setShowAdminLogin(false);
+        setPage("admin");
+      } else {
+        alert("Wrong PIN!");
+      }
+    }}>Login</button>
+    <button onClick={() => setShowAdminLogin(false)}>Cancel</button>
+  </div>
+)}
 
-      {page === "admin" && (
+      {page === "admin" && isAdmin && (
         <div>
           <h2 className="page-title">Bookings ({bookings.length})</h2>
           {bookings.length === 0 && <p className="empty-text">No bookings yet.</p>}
