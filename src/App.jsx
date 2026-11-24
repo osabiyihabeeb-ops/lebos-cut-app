@@ -14,8 +14,14 @@ const SERVICES = [
 ];
 
 export default function App() {
-  const [page, setPage] = useState("home");
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [page, setPage] = useState(() => {
+  return localStorage.getItem("currentPage") || "home";
+});
+
+  const [isAdmin, setIsAdmin] = useState(() => {
+  return localStorage.getItem("isAdmin") === "true";
+});
+
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPin, setAdminPin] = useState("");
   const [selected, setSelected] = useState(SERVICES[4]);
@@ -27,6 +33,14 @@ export default function App() {
   const [commentText, setCommentText] = useState("");
   const [activeCommentId, setActiveCommentId] = useState(null);
   const [form, setForm] = useState({ name: "", phone: "", date: "", time: "" });
+
+  useEffect(() => {
+  localStorage.setItem("isAdmin", isAdmin);
+}, [isAdmin]);
+
+  useEffect(() => {
+  localStorage.setItem("currentPage", page);
+}, [page]);
 
   useEffect(() => { localStorage.setItem("bookings", JSON.stringify(bookings)); }, [bookings]);
   useEffect(() => { localStorage.setItem("likes", JSON.stringify(likes)); }, [likes]);
