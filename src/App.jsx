@@ -74,7 +74,7 @@ export default function App() {
       {page === "home" && (
         <div>
           <div className="hero">
-            <img src="public/lebo.jpeg" alt="Lebo's Cut" className="hero-img" />
+            <img src="/lebo.jpeg" alt="Lebo's Cut" className="hero-img" />
             <div className="hero-overlay">
               <h2 className="hero-title">Look Sharp.<br />Feel Confident.</h2>
               <p className="hero-text">Ibadan's home for clean fades, sharp line-ups and fresh styles.</p>
