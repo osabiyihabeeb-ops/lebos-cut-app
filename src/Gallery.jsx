@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { GALLERY } from "./gallery";
 import "./Gallery.css";
-import { db } from "../firebase"; // Change this if your firebase file is elsewhere
+import { db } from "./firebase"; // Change this if your firebase file is elsewhere
 import { collection, addDoc, onSnapshot, query, where, doc, setDoc, deleteDoc, orderBy, serverTimestamp } from "firebase/firestore";
 
 export default function Gallery() {

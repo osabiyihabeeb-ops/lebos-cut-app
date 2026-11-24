@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { GALLERY } from "./gallery";
 import "./App.css";
 import { db } from "./firebase";
-import { collection, addDoc, onSnapshot, updateDoc, doc, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, updateDoc, doc, orderBy, query, serverTimestamp, setDoc, increment } from "firebase/firestore";
 
 const PAYSTACK_PUBLIC_KEY = "pk_test_d778f262e229b6d13ca41d57c00a24efcca25f97";
 
@@ -25,24 +25,23 @@ export default function App() {
   const [selected, setSelected] = useState(SERVICES[4]);
   const [showBook, setShowBook] = useState(false);
   const [bookings, setBookings] = useState([]);
-  const [bookingSuccess, setBookingSuccess] = useState(null); 
+  const [bookingSuccess, setBookingSuccess] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [likes, setLikes] = useState(() => JSON.parse(localStorage.getItem("likes") || "{}"));
-  const [comments, setComments] = useState(() => JSON.parse(localStorage.getItem("comments") || "{}"));
+  const [likes, setLikes] = useState({});
+  const [comments, setComments] = useState({});
+  const [likedByMe, setLikedByMe] = useState(() => JSON.parse(localStorage.getItem("likedByMe") || "{}"));
   const [commentName, setCommentName] = useState("");
   const [commentText, setCommentText] = useState("");
   const [activeCommentId, setActiveCommentId] = useState(null);
   const [form, setForm] = useState({ name: "", phone: "", email: "", date: "", time: "" });
 
-  // --- NEW: Payment states ---
   const [showPayment, setShowPayment] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [pendingBooking, setPendingBooking] = useState(null);
 
   useEffect(() => { localStorage.setItem("isAdmin", isAdmin); }, [isAdmin]);
   useEffect(() => { localStorage.setItem("currentPage", page); }, [page]);
-  useEffect(() => { localStorage.setItem("likes", JSON.stringify(likes)); }, [likes]);
-  useEffect(() => { localStorage.setItem("comments", JSON.stringify(comments)); }, [comments]);
+  useEffect(() => { localStorage.setItem("likedByMe", JSON.stringify(likedByMe)); }, [likedByMe]);
 
   useEffect(() => {
     const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
@@ -53,9 +52,31 @@ export default function App() {
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "galleryLikes"), (snap) => {
+      const obj = {};
+      snap.docs.forEach(d => { obj[d.id] = d.data().count || 0; });
+      setLikes(obj);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, "galleryComments"), orderBy("createdAt", "asc"));
+    const unsub = onSnapshot(q, (snap) => {
+      const obj = {};
+      snap.docs.forEach(d => {
+        const data = d.data();
+        if (!obj[data.photoId]) obj[data.photoId] = [];
+        obj[data.photoId].push({ name: data.name, text: data.text });
+      });
+      setComments(obj);
+    });
+    return () => unsub();
+  }, []);
+
   const pickService = (s) => { setSelected(s); setShowBook(true); setPage("book"); };
 
-  // STEP 1: Validate form -> Show Payment Form
   const handleBook = (e) => {
     e.preventDefault();
     if (!form.name || !form.phone || !form.email || !form.date || !form.time) return alert("Please fill all fields including email");
@@ -65,20 +86,17 @@ export default function App() {
     setShowPayment(true);
   };
 
-  // STEP 2: Pay with Paystack -> Save to Firebase ONLY if payment succeeds
  const handlePay = () => {
   if (!window.PaystackPop) {
     alert("Paystack not loaded");
     return;
   }
-
   const handler = window.PaystackPop.setup({
     key: PAYSTACK_PUBLIC_KEY,
     email: pendingBooking.email,
     amount: pendingBooking.amount * 100,
     currency: "NGN",
     ref: "LEBO-" + Date.now(),
-
   callback: function (response) {
   (async () => {
     console.log("PENDING:", pendingBooking);
@@ -99,7 +117,6 @@ export default function App() {
       console.log("TRYING TO SAVE:", bookingData);
       const docRef = await addDoc(collection(db, "bookings"), bookingData);
       setBookingSuccess(bookingData);
-
     } catch (err) {
       console.error("SAVE ERROR:", err);
       alert("Payment succeeded but we couldn't save your booking. Please contact us with ref: " + response.reference);
@@ -109,7 +126,6 @@ export default function App() {
     setShowPayment(false);
   })();
 },
-
     onCancel: function () {
       alert("Payment cancelled");
       setIsPaying(false);
@@ -118,22 +134,30 @@ export default function App() {
   handler.openIframe();
 };
 
-
   const updateStatus = async (id, status) => {
     try { await updateDoc(doc(db, "bookings", id), { status }); } catch (e) { alert("Could not update"); }
   };
 
-  const toggleLike = (id) => setLikes({ ...likes, [id]: !likes[id] });
-  const addComment = (id) => {
+  const toggleLike = async (id) => {
+    const already = !!likedByMe[id];
+    const newVal = !already;
+    setLikedByMe({ ...likedByMe, [id]: newVal });
+    try {
+      await setDoc(doc(db, "galleryLikes", String(id)), { count: increment(newVal ? 1 : -1) }, { merge: true });
+    } catch (e) { console.error(e); }
+  };
+
+  const addComment = async (id) => {
     if (!commentName || !commentText) return alert("Type your name and comment");
-    const list = comments[id] || [];
-    setComments({ ...comments, [id]: [...list, { name: commentName, text: commentText }] });
-    setCommentText(""); setActiveCommentId(null);
+    try {
+      await addDoc(collection(db, "galleryComments"), { photoId: String(id), name: commentName, text: commentText, createdAt: serverTimestamp() });
+      setCommentText(""); setActiveCommentId(null);
+    } catch (e) { console.error(e); alert("Could not post comment"); }
   };
 
   return (
     <div className="app">
-       <div className="top-banner"> 
+       <div className="top-banner">
       <header className="header">
         <h1 className="banner-logo"> Lebo's ✂️ <br></br> ✂️ Cut Salon</h1> <br></br>
         <p className="subtitle">Fresh Fades • Ibadan, Nigeria</p>
@@ -236,12 +260,10 @@ export default function App() {
             </form>
           )}
 
-          {/* --- PAYMENT FORM --- */}
           {showPayment && pendingBooking && (
             <div className="booking-form">
               <h3>💳 Payment</h3>
               <p>Please confirm your booking:</p>
-
               <div className="payment-summary">
                   <p><b>Name:</b> {pendingBooking.name}</p>
                   <p><b>Phone:</b> {pendingBooking.phone}</p>
@@ -250,7 +272,6 @@ export default function App() {
                   <p><b>Email:</b> {pendingBooking.email}</p>
                <hr />
                    <p className="payment-total">Total: <b>₦{pendingBooking.amount.toLocaleString()}</b></p>
-  
                   <p><b>Name:</b> {pendingBooking.name}</p>
                   <p><b>Phone:</b> {pendingBooking.phone}</p>
                   <p><b>Service:</b> {pendingBooking.service}</p>
@@ -259,14 +280,12 @@ export default function App() {
                <hr />
                 <p style={{ fontSize: "18px" }}>Total: <b>₦{pendingBooking.amount.toLocaleString()}</b></p>
               </div>
-             
-            <button 
+            <button
                  type="button"
-                 onClick={handlePay} 
+                 onClick={handlePay}
                  className="btn-confirm">
                  Pay ₦{pendingBooking.amount.toLocaleString()} with Paystack →
             </button>
-
               <button onClick={() => { setShowPayment(false); setShowBook(true); }} className="btn-secondary full" style={{ marginTop: "10px" }}>← Back to Details</button>
               <p className="booking-note">Secure payment via Paystack - Card, Transfer, USSD accepted.</p>
             </div>
@@ -282,8 +301,8 @@ export default function App() {
         <div>
           <h2 className="page-title">Our Work - Real Cuts</h2>
           {GALLERY.map(item => {
-            const liked = !!likes[item.id];
-            const totalLikes = item.likes + (liked ? 1 : 0);
+            const liked = !!likedByMe[item.id];
+            const totalLikes = (item.likes || 0) + (likes[item.id] || 0);
             const list = comments[item.id] || [];
             return (
               <div key={item.id} className="card">
@@ -306,7 +325,7 @@ export default function App() {
           })}
         </div>
       )}
-       
+
        {showAdminLogin && !isAdmin && (
   <div style={{padding: "20px", textAlign: "center"}}>
     <h2>Owner Only</h2><p>Enter Admin PIN</p>
