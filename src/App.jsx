@@ -135,7 +135,7 @@ export default function App() {
     <div className="app">
        <div className="top-banner"> 
       <header className="header">
-        <h1 className="banner-logo">✂️ Lebo's Cut</h1> <br></br>
+        <h1 className="banner-logo"> Lebo's ✂️ <br></br> ✂️ Cut Salon</h1> <br></br>
         <p className="subtitle">Fresh Fades • Ibadan, Nigeria</p>
       </header>
       </div> <br></br>
@@ -176,6 +176,7 @@ export default function App() {
           </div>
           <div className="card">
             <h2 className="section-title">Why Choose Us?</h2>
+            <p className="why-item">✅ 500+ <span>Happy Clients</span> </p>
             <p className="why-item">✅ Sharp, clean fades every time</p>
             <p className="why-item">✅ No long waiting - Book online</p>
             <p className="why-item">✅ Friendly barbers, good vibes</p>
@@ -200,8 +201,8 @@ export default function App() {
   </div>
 )}
           <div className="top-banner">
-            <p className="banner-sub">Premium Cuts • Ibadan • 0707 880 9788</p>
-            <a href="https://wa.me/2347078809786" target="_blank" rel="noreferrer" className="whatsapp-btn">💬 Chat on WhatsApp</a>
+            <p className="banner-sub">Premium Cuts • Akala Express, Ibadan  </p>
+            <a href="https://wa.me/2348093680851" target="_blank" rel="noreferrer" className="whatsapp-btn">💬 Chat on WhatsApp</a>
           </div>
 
           <h2 className="services-heading">✂️ Our Services & Prices</h2><br></br>
